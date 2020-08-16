@@ -95,8 +95,8 @@ print(intermittentLakes5.shape)
 #Plot current intermittent and annual lakes
 ax = gplt.polyplot(world, projection=gplt.crs.NorthPolarStereo(), facecolor = 'whitesmoke', figsize = (15, 15))
 
-gplt.pointplot(annualLakes, color = 'black', ax = ax, s = 0.5, label = 'Annual lakes')
-gplt.pointplot(intermittentLakes, color = 'tab:orange', ax = ax, s = 0.5, label = 'Intermittent lakes')
+gplt.pointplot(annualLakes, color = 'black', ax = ax, s = 0.5, label = 'Annual winter ice')
+gplt.pointplot(intermittentLakes, color = 'tab:orange', ax = ax, s = 0.5, label = 'Intermittent winter ice')
 lgnd = plt.legend(loc="lower left", scatterpoints=1, fontsize=18)
 lgnd.legendHandles[0]._sizes = [100]
 lgnd.legendHandles[1]._sizes = [100]
@@ -106,12 +106,12 @@ plt.clf()
 ax = gplt.polyplot(world, projection=gplt.crs.NorthPolarStereo(), facecolor = 'whitesmoke', figsize = (15, 15))
 
 #Plot warming scenarioes
-gplt.pointplot(annualLakes, color = 'black', ax = ax, s = 0.5, label = 'Annual lakes')
+gplt.pointplot(annualLakes, color = 'black', ax = ax, s = 0.5, label = 'Annual winter ice')
 gplt.pointplot(intermittentLakes5, color = 'tab:red', ax = ax, s = 0.5, label = '8° warming')
 gplt.pointplot(intermittentLakes4, color = 'tab:blue', ax = ax, s = 0.5, label = '4.5° warming')
 gplt.pointplot(intermittentLakes3, color = 'yellow', ax = ax, s = 0.5, label = '3.2° warming' )
 gplt.pointplot(intermittentLakes2, color = 'tab:purple', ax = ax, s = 0.5, label = '2° warming')
-gplt.pointplot(intermittentLakes, color = 'tab:orange', ax = ax, s = 0.5, label = 'Intermittent lakes - current')
+gplt.pointplot(intermittentLakes, color = 'tab:orange', ax = ax, s = 0.5, label = 'Intermittent winter ice - current')
 lgnd = plt.legend(loc="lower left", scatterpoints=1, fontsize=18)
 lgnd.legendHandles[0]._sizes = [100]
 lgnd.legendHandles[1]._sizes = [100]

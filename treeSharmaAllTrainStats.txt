@@ -1,0 +1,29 @@
+['MeanAnnualAirTemp_c' 'MeanDepth_m' 'Elevation_m' 'ShorelineDevelopment']
+              precision    recall  f1-score   support
+
+         0.0       0.99      0.98      0.98       486
+         1.0       0.68      0.89      0.77        28
+
+    accuracy                           0.97       514
+   macro avg       0.83      0.93      0.88       514
+weighted avg       0.98      0.97      0.97       514
+
+=== Cross Validated Stats ===
+=== All ROC AUC Scores ===
+[0.64754098 0.77166276 0.77863046 0.84179457]
+
+
+=== Mean ROC AUC Score ===
+Mean AUC: 0.76 (+/- 0.14)
+
+=== Average Precision, Recall, Fscore, Support (0, 1) ===
+[[9.46787279e-01 8.33333333e-02]
+ [9.87654321e-01 3.70370370e-02]
+ [9.66766563e-01 5.12820513e-02]
+ [1.62000000e+02 9.33333333e+00]]
+
+
+=== All PR AUC Scores ===
+[0.05813953488372093, 0.07456140350877193, 0.05263157894736842]
+=== Mean PR AUC Score ===
+0.06177750577995376

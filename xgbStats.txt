@@ -1,0 +1,31 @@
+['IntermittentIceCover' 'Latitude_dd' 'Longitude_dd' 'Elevation_m'
+ 'MeanAnnualAirTemp_c' 'SurfaceArea_km2' 'MeanDepth_m' 'Volume_mcm'
+ 'temp_range' 'tmx' 'tmn']
+              precision    recall  f1-score   support
+
+      Annual       1.00      0.99      0.99       143
+Intermittent       0.80      1.00      0.89         8
+
+    accuracy                           0.99       151
+   macro avg       0.90      0.99      0.94       151
+weighted avg       0.99      0.99      0.99       151
+
+=== Cross Validated Stats ===
+=== All ROC AUC Scores ===
+[0.87695078 0.95399516 0.9842615  0.99719888]
+
+
+=== Mean ROC AUC Score ===
+Mean AUC: 0.95 (+/- 0.09)
+
+=== Average Precision, Recall, Fscore, Support (0, 1) ===
+[[  0.97721145   0.85      ]
+ [  0.99367089   0.59259259]
+ [  0.98535758   0.69243697]
+ [158.           9.        ]]
+
+
+=== All PR AUC Scores ===
+[0.5179640718562875, 0.3854956753160346, 0.6846307385229541]
+=== Mean PR AUC Score ===
+0.5293634952317587

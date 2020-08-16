@@ -1,0 +1,198 @@
+from sklearn.datasets import load_iris
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, make_scorer, precision_recall_fscore_support, average_precision_score
+from sklearn.model_selection import cross_val_score, StratifiedKFold
+#from pydot import graph_from_dot_data
+import pandas as pd
+import numpy as np
+from sklearn import metrics
+from imblearn.over_sampling import SMOTE
+from sklearn.externals.six import StringIO  
+from sklearn.tree import export_graphviz
+import pydotplus
+import statsmodels.api as sm
+import collections
+from sklearn.impute import SimpleImputer
+import joblib
+import geopandas as gpd
+from shapely.geometry import Polygon
+
+RES_CONST = 0.25
+pd.set_option('display.max_columns', None)
+
+tempData = pd.read_csv('ampData.csv')
+
+infile1  ="https://pasta.lternet.edu/package/data/eml/edi/267/2/1c716f66bf3572a37a9f67035f9e02ac".strip() 
+infile1  = infile1.replace("https://","http://")
+                 
+dt1 =pd.read_csv(infile1 
+          ,skiprows=1
+            ,sep=","  
+                ,quotechar='"' 
+           , names=[
+                    "lakecode",     
+                    "lakename",     
+                    "continent",     
+                    "country",     
+                    "state",     
+                    "IntermittentIceCover",     
+                    "Latitude_dd",     
+                    "Longitude_dd",     
+                    "Elevation_m",     
+                    "MeanAnnualAirTemp_c",     
+                    "SurfaceArea_km2",     
+                    "MeanDepth_m",     
+                    "MaximumDepth_m",     
+                    "Volume_mcm",     
+                    "WatershedArea_km2",     
+                    "ShorelineLength_km",     
+                    "ResidenceTime_days",     
+                    "MeanDischarge_m3_sec",     
+                    "Slope_degrees",     
+                    "ShorelineDevelopment",     
+                    "JFMCloudCover_perc",     
+                    "JFMPrecipitation_mm",     
+                    "DistanceToCoast_km",     
+                    "MaximumDistanceToLand_km"    ]
+    )
+# Coerce the data into the types specified in the metadata  
+dt1.lakecode=dt1.lakecode.astype('category')  
+dt1.lakename=dt1.lakename.astype('category')  
+dt1.continent=dt1.continent.astype('category')  
+dt1.country=dt1.country.astype('category')  
+dt1.state=dt1.state.astype('category')  
+dt1.IntermittentIceCover=dt1.IntermittentIceCover.astype('category') 
+dt1.Latitude_dd=pd.to_numeric(dt1.Latitude_dd,errors='coerce') 
+dt1.Longitude_dd=pd.to_numeric(dt1.Longitude_dd,errors='coerce') 
+dt1.Elevation_m=pd.to_numeric(dt1.Elevation_m,errors='coerce') 
+dt1.MeanAnnualAirTemp_c=pd.to_numeric(dt1.MeanAnnualAirTemp_c,errors='coerce') 
+dt1.SurfaceArea_km2=pd.to_numeric(dt1.SurfaceArea_km2,errors='coerce') 
+dt1.MeanDepth_m=pd.to_numeric(dt1.MeanDepth_m,errors='coerce') 
+dt1.MaximumDepth_m=pd.to_numeric(dt1.MaximumDepth_m,errors='coerce') 
+dt1.Volume_mcm=pd.to_numeric(dt1.Volume_mcm,errors='coerce') 
+dt1.WatershedArea_km2=pd.to_numeric(dt1.WatershedArea_km2,errors='coerce') 
+dt1.ShorelineLength_km=pd.to_numeric(dt1.ShorelineLength_km,errors='coerce') 
+dt1.ResidenceTime_days=pd.to_numeric(dt1.ResidenceTime_days,errors='coerce') 
+dt1.MeanDischarge_m3_sec=pd.to_numeric(dt1.MeanDischarge_m3_sec,errors='coerce') 
+dt1.Slope_degrees=pd.to_numeric(dt1.Slope_degrees,errors='coerce') 
+dt1.ShorelineDevelopment=pd.to_numeric(dt1.ShorelineDevelopment,errors='coerce') 
+dt1.JFMCloudCover_perc=pd.to_numeric(dt1.JFMCloudCover_perc,errors='coerce') 
+dt1.JFMPrecipitation_mm=pd.to_numeric(dt1.JFMPrecipitation_mm,errors='coerce') 
+dt1.DistanceToCoast_km=pd.to_numeric(dt1.DistanceToCoast_km,errors='coerce') 
+dt1.MaximumDistanceToLand_km=pd.to_numeric(dt1.MaximumDistanceToLand_km,errors='coerce') 
+
+dt = dt1.filter([  "MeanAnnualAirTemp_c",  
+                   'MeanDepth_m',
+                   'Elevation_m',
+                   'ShorelineDevelopment',
+                   'IntermittentIceCover', 'Longitude_dd', 'Latitude_dd'])
+
+#Create polygons for each grid in temp data for spatial join
+geoms = []
+for index, row in tempData.iterrows():
+    ln = row.lon
+    lt = row.lat
+    geom = Polygon([(ln - RES_CONST, lt + RES_CONST), (ln + RES_CONST, lt + RES_CONST), ((ln + RES_CONST), (lt - RES_CONST)), (ln - RES_CONST, (lt - RES_CONST))])
+    geoms.append(geom)
+
+#create geodataframes to spatially merge datasets
+gCharData = gpd.GeoDataFrame(dt, geometry = gpd.points_from_xy(dt.Longitude_dd, dt.Latitude_dd))
+
+gTempData = gpd.GeoDataFrame(tempData, geometry = gpd.points_from_xy(tempData.lon, tempData.lat))
+
+gTempData['geometry'] = geoms 
+
+gdt = gpd.sjoin(gCharData, gTempData, op = 'within')
+
+
+#fill in later
+gdt = gdt.drop(['lat', 'lon', 'Longitude_dd', 'Latitude_dd', 'tmn', 'tmx', 'index_right', 'geometry'], axis = 1)
+dt = pd.DataFrame(gdt)
+
+dt['IntermittentIceCover'] = dt['IntermittentIceCover'].map({'Y': 1, 'N': 0})
+imputer = SimpleImputer(missing_values=np.nan, strategy='median')
+dt = pd.DataFrame(imputer.fit_transform(dt), columns = dt.columns)
+
+#Split into X and Y
+X = dt.loc[:, dt.columns != 'IntermittentIceCover']
+y = dt.loc[:, dt.columns == 'IntermittentIceCover']
+
+#Select feature columns
+cols=[ "MeanAnnualAirTemp_c",  
+                   'MeanDepth_m',
+                   'Elevation_m',
+                   'ShorelineDevelopment', 'temp_range']
+
+X= X[cols]
+y= y['IntermittentIceCover']
+print(X.columns.values)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.3, random_state=4)
+
+# Fit the classifier
+dt = DecisionTreeClassifier(max_depth=4, min_samples_split = 20)
+dt.fit(X_train, y_train)
+
+joblib.dump(dt, 'treeSharmaTemprange.sav')
+
+y_pred = dt.predict(X_test)
+
+  
+# print classification report 
+print(classification_report(y_test, y_pred)) 
+
+
+# Visualize tree
+dot_data = StringIO()
+export_graphviz(dt, out_file=dot_data,  
+                filled=True, rounded=True,
+                special_characters=True, feature_names = cols,class_names=['Annual','Intermittent'])
+graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
+nodes = graph.get_node_list()
+
+colors =  ('lightblue', 'orangered', 'white')
+
+for node in nodes:
+    if node.get_name() not in ('node', 'edge'):
+        values = dt.tree_.value[int(node.get_name())][0]
+        #color only nodes where only one class is present   
+        node.set_fillcolor(colors[np.argmax(values)])
+
+graph.write_png('treeSharmaTemprange.png')
+
+def evaluate(model, X, y):
+
+    print("=== Cross Validated Stats ===")
+    rfc_cv_score = cross_val_score(model, X, y.values.ravel(), cv=4, scoring='roc_auc')
+    print("=== All ROC AUC Scores ===")
+    print(rfc_cv_score)
+    print('\n')
+
+
+    print("=== Mean ROC AUC Score ===")
+    print("Mean AUC: %0.2f (+/- %0.2f)\n" % (rfc_cv_score.mean(), rfc_cv_score.std() * 2))
+    kf = StratifiedKFold(n_splits=3, random_state=3, shuffle=True)
+
+    score_array =[]
+    pr_auc_array = []
+    for train_index, test_index in kf.split(X, y):
+        X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+        y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+        clf = model.fit(X_train,y_train.values.ravel())
+        y_pred = clf.predict(X_test)
+        score_array.append(precision_recall_fscore_support(y_test, y_pred, average=None))
+        pr_auc_array.append(average_precision_score(y_test, y_pred))
+
+    avg_score = np.mean(score_array,axis=0)
+    print("=== Average Precision, Recall, Fscore, Support (0, 1) ===")
+    print(avg_score)
+    print("\n")
+
+    pr_auc_score = np.mean(pr_auc_array, axis=0)
+    print("=== All PR AUC Scores ===")
+    print(pr_auc_array)
+    print("=== Mean PR AUC Score ===")
+    print(pr_auc_score)
+
+evaluate(dt, X, y)
